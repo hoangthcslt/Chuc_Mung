@@ -1,271 +1,415 @@
-<!DOCTYPE html> <!-- Khai báo đây là một tài liệu HTML5 tiêu chuẩn -->
-<html lang="vi"> <!-- Thẻ gốc của trang, lang="vi" cho biết ngôn ngữ là tiếng Việt -->
-<head> <!-- Chứa các thông tin "hậu trường", không hiển thị trực tiếp -->
-    <meta charset="UTF-8"> <!-- Khai báo bảng mã UTF-8 để hiển thị tiếng Việt đúng -->
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Rất quan trọng: Giúp trang web hiển thị đúng trên mọi thiết bị, đặc biệt là điện thoại -->
-    <title>Lời Nhắn Đặc Biệt!</title> <!-- Tiêu đề hiển thị trên tab của trình duyệt -->
-    
-    <!-- Các dòng này dùng để tải một font chữ đẹp từ Google Fonts -->
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lời Nhắn Đặc Biệt!</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    
+    <style>
+        /* === CẤU HÌNH CƠ BẢN === */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background-color: #ffdde1;
+            overflow: hidden;
+            font-family: 'Pacifico', cursive;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* === XOAY MÀN HÌNH TRÊN ĐIỆN THOẠI (MOBILE ROTATION) === */
+        /* Logic: Nếu màn hình dọc (Portrait), xoay toàn bộ nội dung chính 90 độ */
+        @media screen and (orientation: portrait) and (max-width: 900px) {
+            #main-wrapper {
+                width: 100vh; /* Chiều rộng bằng chiều cao màn hình */
+                height: 100vw; /* Chiều cao bằng chiều rộng màn hình */
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%) rotate(90deg); /* Xoay ngang */
+                overflow: hidden;
+            }
+            /* Điều chỉnh kích thước chữ một chút khi xoay để dễ đọc */
+            .message-box p { font-size: clamp(1.8em, 5vh, 3em) !important; }
+        }
+        @media screen and (orientation: landscape) {
+            #main-wrapper {
+                width: 100%; height: 100%;
+                position: relative;
+            }
+        }
+
+        /* === MÀN HÌNH CHỜ & NÚT BẤM === */
+        #start-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #ffdde1;
+            z-index: 100;
+            display: flex; justify-content: center; align-items: center; flex-direction: column;
+            transition: opacity 0.5s ease;
+        }
+        
+        /* Hiệu ứng nút bấm rung rinh */
+        @keyframes heartbeat {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        #start-button {
+            padding: 15px 40px;
+            font-family: 'Pacifico', cursive;
+            font-size: 1.8em;
+            color: white;
+            background: linear-gradient(45deg, #ff69b4, #ff8da1);
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 10px 25px rgba(255, 105, 180, 0.4);
+            animation: heartbeat 1.5s infinite;
+        }
+
+        /* === MÀN HÌNH ĐẾM NGƯỢC === */
+        #countdown-screen {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #ffdde1; /* Nền hồng */
+            z-index: 99; /* Dưới nút start một chút */
+            display: none; /* Ẩn mặc định */
+            justify-content: center; align-items: center;
+            flex-direction: column;
+        }
+        #countdown-number {
+            font-size: 8em;
+            color: #ff69b4;
+            text-shadow: 2px 2px 10px rgba(255, 255, 255, 0.8);
+            animation: countPulse 1s infinite;
+        }
+        @keyframes countPulse {
+            0% { transform: scale(0.5); opacity: 0; }
+            50% { transform: scale(1.2); opacity: 1; }
+            100% { transform: scale(1); opacity: 0; }
+        }
+
+        /* === MATRIX & NỘI DUNG CHÍNH === */
+        #matrix-canvas {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 1;
+            transition: opacity 1.5s ease-out;
+        }
+
+        .content-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; justify-content: center; align-items: center;
+            z-index: 2;
+            padding: 20px;
+            pointer-events: none; /* Để click xuyên qua nếu cần */
+        }
+
+        .message-box {
+            width: 100%;
+            text-align: center;
+            color: white;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px #ff0055;
+        }
+
+        .message-box p {
+            font-size: clamp(2.2em, 6vw, 3.5em);
+            margin-bottom: 20px;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 1s ease-out, transform 1s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Hiệu ứng nảy nhẹ */
+            display: none; /* Ẩn hoàn toàn để không chiếm chỗ */
+        }
+        .message-box p.visible {
+            display: block; /* Hiện lại */
+            animation: fadeInMove 1s forwards; 
+        }
+        @keyframes fadeInMove {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .fade-out { opacity: 0 !important; transition: opacity 2s; }
+
+        /* === HIỆU ỨNG HOA & ẢNH TRÁI TIM === */
+        #flower-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 3;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        /* Class chung cho vật thể bay (hoa + ảnh) */
+        .floating-item {
+            position: absolute;
+            bottom: -100px;
+            opacity: 0;
+            animation-name: floatUp;
+            animation-timing-function: linear;
+            animation-fill-mode: forwards;
+        }
+
+        /* Style riêng cho Hoa */
+        .flower-item {
+            font-size: 2.5em;
+            filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));
+        }
+
+        /* Style riêng cho Ảnh Trái Tim */
+        .heart-image-item {
+            width: 80px;
+            height: 80px;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            /* Tạo hình trái tim bằng mask-image (cách hiện đại nhất) */
+            mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/></svg>");
+            -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/></svg>");
+            mask-repeat: no-repeat;
+            mask-position: center;
+            mask-size: contain;
+            
+            /* Viền phát sáng cho trái tim */
+            filter: drop-shadow(0 0 8px rgba(255, 20, 147, 0.8)); 
+            box-shadow: inset 0 0 20px rgba(255,192,203,0.5); 
+        }
+
+        @keyframes floatUp {
+            0% { transform: translateY(0) translateX(0) rotate(0deg) scale(0.5); opacity: 0; }
+            10% { opacity: 1; transform: scale(1); }
+            50% { transform: translateY(-40vh) translateX(20px) rotate(180deg); }
+            100% { transform: translateY(-110vh) translateX(-20px) rotate(360deg) scale(1.2); opacity: 0; }
+        }
+
+        /* === LỜI CHÚC CUỐI === */
+        #final-message-container {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            display: flex; justify-content: center; align-items: center;
+            z-index: 4;
+            opacity: 0;
+            transition: opacity 2s ease-in;
+            pointer-events: none;
+        }
+        #final-message h1 {
+            font-size: clamp(3em, 9vw, 5em);
+            color: #fff;
+            text-shadow: 0 0 15px #ff1493, 0 0 30px #ff1493, 0 0 50px #fff;
+            text-align: center;
+            animation: pulseFinal 2s infinite ease-in-out;
+        }
+        @keyframes pulseFinal {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+    </style>
 </head>
 
-<body> <!-- Chứa toàn bộ nội dung sẽ được hiển thị trên trang -->
+<body>
 
-    <!-- Màn hình chờ: Lớp phủ ban đầu với nút bấm -->
-    <div id="start-screen">
-        <button id="start-button">Nhấn vào đây nhé!</button>
-    </div>
+    <!-- Wrapper chính để xử lý xoay màn hình trên mobile -->
+    <div id="main-wrapper">
 
-    <!-- Thẻ Audio: Dùng để chứa và điều khiển file nhạc nền -->
-    <!-- "loop" nghĩa là nhạc sẽ tự động phát lại khi hết -->
-    <!-- "preload="auto" gợi ý cho trình duyệt nên tải trước file nhạc -->
-    <audio id="background-music" loop preload="auto">
-        <source src="nhac-nen.mp3" type="audio/mpeg"> <!-- Đường dẫn đến file nhạc của bạn -->
-    </audio>
-
-    <!-- Canvas: Một "tấm bạt" để JavaScript vẽ hiệu ứng Matrix trái tim lên -->
-    <canvas id="matrix-canvas"></canvas>
-
-    <!-- Container cho các dòng chữ ban đầu -->
-    <div class="content-container">
-        <div class="message-box">
-            <p>Gửi đến: Hoa Linh🌷</p>
-            <!-- Các dòng chữ ban đầu -->
-            <p>Hôm nay là ngày dành cho những cô gái tuyệt vời, và b là một trong số đó 🌞
-            <p>Chúc bạn một ngày 20/10 zui zẻ!</p>
-            <p>Chúc bạn luôn vui vẻ, tích cực!</p>
-            <p>Dù lâu lắm rồi mình mới inbox lại...,</p>
-            <p>..nhưng tui vẫn luôn mong những điều tốt đẹp nhất đến với b.</p>
-            <p>❤️</p>
-            <p>Cre: p.a.n.d.a - ʕ•ᴥ•ʔ <p>
+        <!-- Màn hình chờ -->
+        <div id="start-screen">
+            <button id="start-button">❤️ Nhấn vào đây nhé! ❤️</button>
         </div>
-    </div>
 
-    <!-- Container rỗng, JavaScript sẽ thêm các bông hoa vào đây -->
-    <div id="flower-container"></div>
+        <!-- Màn hình đếm ngược -->
+        <div id="countdown-screen">
+            <div id="countdown-number">5</div>
+            <p style="font-size: 1.5em; color: #ff69b4; margin-top: 20px;">Chờ xíu nha...</p>
+        </div>
 
-    <!-- Container cho dòng chữ chúc mừng cuối cùng -->
-    <div id="final-message-container">
-        <div id="final-message"><h1>Chúc mừng 20/10</h1></div>
-    </div>
-    
-    <!-- Thẻ script để chứa mã JavaScript, phần "bộ não" của trang -->
+        <audio id="background-music" loop preload="auto">
+            <source src="nhac-nen.mp3" type="audio/mpeg"> 
+        </audio>
+
+        <canvas id="matrix-canvas"></canvas>
+
+        <div class="content-container">
+            <div class="message-box">
+                <p>Gửi đến: Hoa Linh 🌷</p>
+                <p>Hôm nay là ngày dành cho những cô gái tuyệt vời...</p>
+                <p>...và cậu là một trong số đó 🌞</p>
+                <p>Chúc cậu một ngày 20/10 thiệt là zui zẻ!</p>
+                <p>Luôn xinh đẹp, yêu đời và tích cực nhé!</p>
+                <p>Dù lâu lắm rồi mình mới inbox lại...</p>
+                <p>..nhưng tui vẫn luôn mong những điều tốt đẹp nhất đến với cậu.</p>
+                <p>❤️</p>
+                <p style="font-size: 0.6em">Cre: p.a.n.d.a - ʕ•ᴥ•ʔ</p>
+            </div>
+        </div>
+
+        <div id="flower-container"></div>
+
+        <div id="final-message-container">
+            <div id="final-message"><h1>Happy 20/10 ❤️</h1></div>
+        </div>
+
+    </div> <!-- Kết thúc main-wrapper -->
+
     <script>
-        // ... Toàn bộ code JavaScript nằm ở đây ...
+        const startScreen = document.getElementById('start-screen');
+        const startButton = document.getElementById('start-button');
+        const countdownScreen = document.getElementById('countdown-screen');
+        const countdownNumber = document.getElementById('countdown-number');
+        const music = document.getElementById('background-music');
+        const mainWrapper = document.getElementById('main-wrapper');
+
+        // === 1. XỬ LÝ NÚT BẤM VÀ ĐẾM NGƯỢC ===
+        startButton.addEventListener('click', () => {
+            // Ẩn nút bấm
+            startScreen.style.opacity = '0';
+            setTimeout(() => { startScreen.style.display = 'none'; }, 500);
+
+            // Hiện màn hình đếm ngược
+            countdownScreen.style.display = 'flex';
+            music.play().catch(e => console.log("Cần tương tác để phát nhạc")); // Phát nhạc ngay
+
+            let count = 5;
+            const countInterval = setInterval(() => {
+                count--;
+                if (count > 0) {
+                    countdownNumber.innerText = count;
+                } else {
+                    clearInterval(countInterval);
+                    // Kết thúc đếm ngược -> Vào nội dung chính
+                    countdownScreen.style.display = 'none';
+                    runVisualTimeline();
+                }
+            }, 1000);
+        });
+
+        // === 2. HIỆU ỨNG MATRIX (TỐI ƯU CHO WRAPPER) ===
+        const canvas = document.getElementById('matrix-canvas');
+        const ctx = canvas.getContext('2d');
+
+        // Hàm set kích thước canvas theo kích thước của wrapper (để hỗ trợ xoay)
+        function resizeCanvas() {
+            canvas.width = mainWrapper.offsetWidth;
+            canvas.height = mainWrapper.offsetHeight;
+        }
+        // Gọi resize ngay và khi đổi kích thước
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        const characters = '❤';
+        const fontSize = 20;
+        let columns = Math.floor(canvas.width / fontSize);
+        let drops = [];
+        
+        function initMatrix() {
+            columns = Math.floor(canvas.width / fontSize);
+            drops = Array(columns).fill(1);
+        }
+        initMatrix();
+
+        function drawMatrix() {
+            ctx.fillStyle = 'rgba(255, 221, 225, 0.15)'; // Nền mờ hơn chút
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = '#ff5e99'; // Màu chữ đậm hơn chút
+            ctx.font = `${fontSize}px Arial`;
+            
+            for (let i = 0; i < drops.length; i++) {
+                const text = characters;
+                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
+                
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.98) {
+                    drops[i] = 0;
+                }
+                drops[i]++;
+            }
+        }
+
+        // === 3. HIỆU ỨNG HOA VÀ ẢNH NỔI LÊN ===
+        const flowerContainer = document.getElementById('flower-container');
+        const flowers = ['🌸', '🌺', '🌷', '🌻', '🌼', '🌹', '💐']; 
+        const imageUrl = 'anh_nen.jpg'; // Link ảnh của bạn
+
+        function createFloatingElement() {
+            const el = document.createElement('div');
+            // Random: 70% là hoa, 30% là ảnh
+            const isImage = Math.random() > 0.7; 
+
+            if (isImage) {
+                el.classList.add('floating-item', 'heart-image-item');
+                el.style.backgroundImage = `url('${imageUrl}')`;
+            } else {
+                el.classList.add('floating-item', 'flower-item');
+                el.innerText = flowers[Math.floor(Math.random() * flowers.length)];
+            }
+
+            // Random vị trí xuất phát (theo chiều rộng của wrapper)
+            el.style.left = `${Math.random() * 100}%`;
+            
+            // Random các thông số animation để tự nhiên hơn
+            const duration = Math.random() * 3 + 4; // 4s -> 7s
+            el.style.animationDuration = `${duration}s`;
+            el.style.animationDelay = '0s';
+            
+            flowerContainer.appendChild(el);
+
+            // Xóa sau khi bay xong
+            setTimeout(() => el.remove(), duration * 1000);
+        }
+
+        // === 4. KỊCH BẢN CHẠY CHƯƠNG TRÌNH ===
+        function runVisualTimeline() {
+            // Chạy Matrix
+            const matrixInterval = setInterval(drawMatrix, 50);
+
+            const messages = document.querySelectorAll('.message-box p');
+            const messageBox = document.querySelector('.message-box');
+            const finalMessageContainer = document.getElementById('final-message-container');
+            
+            let currentTime = 0;
+            const timePerLine = 2500; // Thời gian đọc mỗi dòng (tăng lên cho dễ đọc)
+
+            // Hiện từng dòng chữ (chỉ hiện 1 dòng tại 1 thời điểm để đỡ rối trên đt)
+            messages.forEach((p, index) => {
+                setTimeout(() => {
+                    // Ẩn dòng trước đó (nếu có và không phải là dòng cuối cùng của cre)
+                    if(index > 0) {
+                        messages[index-1].style.display = 'none';
+                        messages[index-1].classList.remove('visible');
+                    }
+                    // Nếu là dòng Cre cuối cùng thì giữ lại dòng trái tim
+                    if (index === messages.length - 1) {
+                         messages[index-1].style.display = 'block'; // Giữ lại trái tim
+                         messages[index-1].classList.add('visible');
+                    }
+
+                    p.classList.add('visible');
+                }, currentTime);
+                currentTime += timePerLine;
+            });
+
+            // Tổng thời gian chờ hết chữ
+            const totalTextTime = currentTime + 2000;
+
+            // Sau khi hết chữ: Mờ matrix + Ẩn box chữ
+            setTimeout(() => {
+                messageBox.classList.add('fade-out');
+                canvas.classList.add('fade-out');
+                setTimeout(() => clearInterval(matrixInterval), 2000); // Dừng vẽ matrix
+            }, totalTextTime);
+
+            // Bắt đầu mưa hoa và ảnh (bắt đầu sớm hơn 1 xíu khi chữ đang mờ)
+            setTimeout(() => {
+                // Tạo liên tục
+                const flowerInterval = setInterval(createFloatingElement, 300); 
+                
+                // Dừng tạo sau 15 giây (hoặc để chạy mãi nếu muốn)
+                // setTimeout(() => clearInterval(flowerInterval), 15000); 
+            }, totalTextTime - 1000);
+
+            // Hiện lời chúc cuối cùng
+            setTimeout(() => {
+                finalMessageContainer.style.opacity = '1';
+            }, totalTextTime + 1000);
+        }
     </script>
 </body>
 </html>
-<style>
-    /* Reset lại các style mặc định của trình duyệt để trang web hiển thị nhất quán */
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    /* Style cho toàn bộ trang */
-    body {
-        background-color: #ffdde1; /* Màu nền hồng nhạt */
-        overflow: hidden; /* Ẩn thanh cuộn của trình duyệt */
-        font-family: 'Pacifico', cursive; /* Áp dụng font chữ đẹp đã tải */
-    }
-
-    /* --- MÀN HÌNH CHỜ BAN ĐẦU --- */
-    #start-screen {
-        position: fixed; /* Cố định vị trí, không bị cuộn */
-        top: 0; left: 0; width: 100%; height: 100%; /* Phủ kín toàn bộ màn hình */
-        background-color: #ffdde1; /* Cùng màu nền */
-        z-index: 100; /* Đặt lớp này lên trên cùng (số càng lớn càng ở trên) */
-        display: flex; /* Dùng Flexbox để căn chỉnh nội dung */
-        justify-content: center; /* Căn giữa theo chiều ngang */
-        align-items: center; /* Căn giữa theo chiều dọc */
-        flex-direction: column; /* Sắp xếp các item theo chiều dọc */
-        cursor: pointer; /* Biến con trỏ thành hình bàn tay */
-    }
-
-    #start-button {
-        padding: 15px 30px; /* Khoảng đệm bên trong nút */
-        font-family: 'Pacifico', cursive; /* Dùng font chữ đẹp */
-        font-size: 1.5em; /* Kích thước chữ */
-        color: white; /* Màu chữ */
-        background-color: #ff69b4; /* Màu nền của nút */
-        border: none; /* Bỏ viền */
-        border-radius: 50px; /* Bo tròn các góc để thành hình viên thuốc */
-        cursor: pointer; /* Con trỏ hình bàn tay */
-        box-shadow: 0 5px 15px rgba(0,0,0,0.2); /* Tạo bóng mờ cho nút */
-        transition: transform 0.2s ease; /* Tạo hiệu ứng chuyển động mượt khi tương tác */
-    }
-    #start-button:hover { transform: scale(1.05); } /* Phóng to nút một chút khi di chuột qua */
-
-    /* --- PHẦN 1: MATRIX & LỜI NHẮN BAN ĐẦU --- */
-    #matrix-canvas {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%; /* Phủ kín màn hình */
-        z-index: 1; /* Nằm ở lớp dưới (sau lớp chữ) */
-        transition: opacity 1.5s ease-out; /* Hiệu ứng mờ dần trong 1.5s */
-    }
-    .content-container {
-        display: flex; justify-content: center; align-items: center; /* Căn giữa nội dung */
-        height: 100vh; /* Cao bằng chiều cao màn hình */
-        position: relative; /* Để thiết lập z-index */
-        z-index: 2; /* Nằm trên lớp canvas */
-        padding: 20px; /* Khoảng đệm tránh chữ dính sát viền màn hình */
-    }
-    .message-box {
-        width: 100%; /* Box chứa chữ chiếm hết chiều rộng */
-        text-align: center; /* Căn giữa chữ */
-        color: white; /* Màu chữ */
-        text-shadow: 0 0 10px rgba(255, 255, 255, 0.7), 0 0 20px rgba(236, 13, 13, 0.7); /* Tạo hiệu ứng chữ phát sáng */
-    }
-    
-    .message-box p {
-        /* font-size: clamp(MIN, IDEAL, MAX) -> Kích thước chữ linh hoạt */
-        /* MIN: 2.2em -> Không bao giờ nhỏ hơn kích thước này */
-        /* IDEAL: 6vw -> Bằng 6% chiều rộng màn hình. Đây là giá trị co giãn */
-        /* MAX: 3.5em -> Không bao giờ lớn hơn kích thước này */
-        font-size: clamp(2.2em, 6vw, 3.5em);
-        
-        margin-bottom: 25px; /* Khoảng cách với dòng dưới */
-        opacity: 0; /* Mặc định ẩn đi */
-        transform: translateY(20px); /* Dịch chuyển xuống dưới 20px so với vị trí gốc */
-        transition: opacity 1.5s ease-out, transform 1s ease-out; /* Tạo hiệu ứng xuất hiện mượt mà */
-    }
-
-    .message-box p.visible { opacity: 1; transform: translateY(0); } /* Style khi dòng chữ được JS thêm class 'visible' -> Hiện ra và trượt về vị trí gốc */
-    .fade-out { opacity: 0 !important; } /* Style để làm mờ mọi thứ đi, !important để ưu tiên cao nhất */
-
-    /* --- PHẦN 2: HOA NỞ & LỜI CHÚC CUỐI --- */
-    #flower-container {
-        position: fixed; bottom: 0; left: 0; width: 100%; height: 100%; /* Phủ kín màn hình */
-        z-index: 3; /* Nằm trên lớp Matrix */
-        pointer-events: none; /* Cho phép click "xuyên qua" lớp này */
-    }
-    .flower {
-        position: absolute; /* Vị trí tuyệt đối so với #flower-container */
-        bottom: -50px; /* Bắt đầu ở dưới màn hình */
-        font-size: 2em; /* Kích thước bông hoa */
-        opacity: 0; /* Mặc định ẩn */
-        animation: rise-and-fade linear forwards; /* Áp dụng animation tên là 'rise-and-fade' */
-    }
-    /* Định nghĩa animation 'rise-and-fade' */
-    @keyframes rise-and-fade {
-        0% { transform: translateY(0) scale(0.5); opacity: 0; } /* Lúc bắt đầu: Ở vị trí gốc, nhỏ, mờ */
-        10% { opacity: 1; transform: scale(1); } /* Tại 10% thời gian: Hiện rõ, kích thước bình thường */
-        90% { opacity: 1; } /* Giữ nguyên đến 90% thời gian */
-        100% { transform: translateY(-70vh) scale(1.2); opacity: 0; } /* Lúc kết thúc: Bay lên cao 70% màn hình, phóng to một chút rồi mờ đi */
-    }
-    #final-message-container {
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%; /* Phủ kín màn hình */
-        display: flex; justify-content: center; align-items: center; /* Căn giữa */
-        z-index: 4; /* Nằm trên lớp hoa */
-        opacity: 0; /* Mặc định ẩn */
-        transition: opacity 2s ease-in; /* Hiệu ứng hiện ra trong 2s */
-    }
-    #final-message h1 {
-        font-size: clamp(2.8em, 8vw, 4.5em); /* Kích thước chữ linh hoạt */
-        color: white;
-        text-shadow: 0 0 15px #ff69b4, 0 0 25px #ff69b4; /* Hiệu ứng phát sáng mạnh hơn */
-        text-align: center;
-    }
-</style>
-<script>
-    // === Giai đoạn 1: Lấy các phần tử HTML cần điều khiển ===
-    const startScreen = document.getElementById('start-screen');
-    const startButton = document.getElementById('start-button');
-    const music = document.getElementById('background-music');
-
-    // === Giai đoạn 2: Định nghĩa các hàm chức năng ===
-
-    // Hàm này được gọi khi người dùng nhấn nút "Bắt đầu"
-    function startExperience() {
-        music.play(); // Phát nhạc
-        startScreen.style.transition = 'opacity 0.5s'; // Thêm hiệu ứng mờ cho màn hình chờ
-        startScreen.style.opacity = '0'; // Làm mờ màn hình chờ đi
-        // Đặt một bộ đếm thời gian: sau 500ms (khi đã mờ hẳn), ẩn hoàn toàn màn hình chờ để không che các phần tử khác
-        setTimeout(() => {
-            startScreen.style.display = 'none';
-        }, 500);
-        runVisualTimeline(); // Gọi hàm chạy chuỗi hiệu ứng chính
-    }
-
-    // Gắn sự kiện "click" vào nút bắt đầu. Khi click, nó sẽ chạy hàm startExperience
-    startButton.addEventListener('click', startExperience);
-
-    // --- Các hàm cho hiệu ứng hình ảnh ---
-    const canvas = document.getElementById('matrix-canvas'); // Lấy canvas
-    const ctx = canvas.getContext('2d'); // Lấy "bút vẽ" 2D
-    canvas.width = window.innerWidth; // Đặt chiều rộng canvas bằng chiều rộng cửa sổ
-    canvas.height = window.innerHeight; // Đặt chiều cao canvas bằng chiều cao cửa sổ
-    const characters = '❤'; // Ký tự để vẽ
-    const fontSize = 18;
-    const columns = Math.floor(canvas.width / fontSize); // Tính số cột trái tim dựa trên chiều rộng màn hình
-    const drops = Array(columns).fill(1); // Tạo một mảng để lưu vị trí của mỗi cột trái tim
-    let matrixInterval; // Biến để lưu ID của vòng lặp vẽ Matrix, để sau này có thể dừng nó
-
-    // Hàm vẽ hiệu ứng Matrix
-    function drawMatrix() {
-        ctx.fillStyle = 'rgba(255, 221, 225, 0.1)'; // Chọn màu nền hồng mờ
-        ctx.fillRect(0, 0, canvas.width, canvas.height); // Vẽ một lớp nền mờ lên toàn bộ canvas -> tạo hiệu ứng "đuôi"
-        ctx.fillStyle = '#f85888'; // Chọn màu cho trái tim
-        ctx.font = `${fontSize}px Arial`; // Đặt font và kích thước chữ
-        // Lặp qua từng cột
-        for (let i = 0; i < drops.length; i++) {
-            ctx.fillText(characters, i * fontSize, drops[i] * fontSize); // Vẽ trái tim tại vị trí hiện tại của cột
-            // Nếu trái tim rơi xuống đáy và có một xác suất ngẫu nhiên, đưa nó trở lại đỉnh
-            if (drops[i] * fontSize > canvas.height && Math.random() > 0.975) drops[i] = 0;
-            drops[i]++; // Di chuyển vị trí của trái tim xuống dưới cho lần vẽ tiếp theo
-        }
-    }
-
-    const flowerContainer = document.getElementById('flower-container');
-    const flowers = ['🌸', '🌺', '🌷', '🌻', '🌼']; // Mảng chứa các icon hoa
-    // Hàm tạo ra một bông hoa
-    function createFlower() {
-        const flower = document.createElement('div'); // Tạo một thẻ <div> mới
-        flower.classList.add('flower'); // Thêm class 'flower' để có style CSS
-        flower.innerText = flowers[Math.floor(Math.random() * flowers.length)]; // Chọn ngẫu nhiên một icon hoa
-        flower.style.left = `${Math.random() * 100}vw`; // Đặt vị trí ngang ngẫu nhiên
-        flower.style.animationDuration = `${Math.random() * 3 + 4}s`; // Đặt thời gian animation ngẫu nhiên
-        flower.style.animationDelay = `${Math.random() * 2}s`; // Đặt độ trễ animation ngẫu nhiên
-        flowerContainer.appendChild(flower); // Thêm bông hoa vào trang web
-        setTimeout(() => flower.remove(), 7000); // Sau 7s, xóa bông hoa khỏi trang để tiết kiệm bộ nhớ
-    }
-
-    // === Giai đoạn 3: Hàm điều khiển chuỗi sự kiện chính ===
-    function runVisualTimeline() {
-        // Bắt đầu vẽ Matrix, lặp lại mỗi 50ms
-        matrixInterval = setInterval(drawMatrix, 50);
-
-        const messages = document.querySelectorAll('.message-box p');
-        const messageBox = document.querySelector('.message-box');
-        const finalMessageContainer = document.getElementById('final-message-container');
-        let totalTime = 500; // Thời gian chờ ban đầu
-        const messageInterval = 1800; // Khoảng cách thời gian giữa các dòng chữ
-
-        // 1. Lên lịch hiển thị lần lượt các dòng chữ
-        messages.forEach(p => {
-            setTimeout(() => p.classList.add('visible'), totalTime); // Thêm class 'visible' để hiện chữ
-            totalTime += messageInterval; // Tăng tổng thời gian cho dòng chữ tiếp theo
-        });
-
-        // 2. Chờ thêm 3s để người dùng đọc chữ cuối
-        totalTime += 3000;
-
-        // 3. Lên lịch làm mờ cảnh ban đầu
-        setTimeout(() => {
-            messageBox.classList.add('fade-out');
-            canvas.classList.add('fade-out');
-        }, totalTime);
-
-        // 4. Lên lịch dừng hẳn việc vẽ Matrix (sau khi nó đã mờ đi)
-        setTimeout(() => clearInterval(matrixInterval), totalTime + 1500);
-
-        // 5. Lên lịch bắt đầu tạo hoa
-        setTimeout(() => {
-            let flowerCreationInterval = setInterval(createFlower, 200); // Tạo hoa liên tục mỗi 200ms
-            setTimeout(() => clearInterval(flowerCreationInterval), 10000); // Dừng việc tạo hoa sau 10s
-        }, totalTime + 500);
-
-        // 6. Lên lịch hiển thị dòng chữ cuối cùng
-        setTimeout(() => {
-            finalMessageContainer.style.opacity = '1';
-        }, totalTime + 2500);
-    }
-</script>
