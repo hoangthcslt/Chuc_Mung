@@ -19,200 +19,155 @@
             height: 100vh;
         }
 
-        /* === XOAY MÀN HÌNH TRÊN ĐIỆN THOẠI (MOBILE ROTATION) === */
+        /* === XOAY MÀN HÌNH TRÊN ĐIỆN THOẠI === */
         /* Logic: Nếu màn hình dọc (Portrait), xoay toàn bộ nội dung chính 90 độ */
         @media screen and (orientation: portrait) and (max-width: 900px) {
             #main-wrapper {
-                width: 100vh; /* Chiều rộng bằng chiều cao màn hình */
-                height: 100vw; /* Chiều cao bằng chiều rộng màn hình */
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%) rotate(90deg); /* Xoay ngang */
+                width: 100vh; height: 100vw;
+                position: absolute; top: 50%; left: 50%;
+                transform: translate(-50%, -50%) rotate(90deg);
                 overflow: hidden;
             }
-            /* Điều chỉnh kích thước chữ một chút khi xoay để dễ đọc */
             .message-box p { font-size: clamp(1.8em, 5vh, 3em) !important; }
-        }
-        @media screen and (orientation: landscape) {
-            #main-wrapper {
-                width: 100%; height: 100%;
-                position: relative;
+            
+            /* Tinh chỉnh ảnh khi xoay màn hình */
+            #center-image-container img {
+                max-height: 65vw !important; /* Giới hạn chiều cao để không bị tràn */
+                max-width: 80vh !important;
             }
         }
+        @media screen and (orientation: landscape) {
+            #main-wrapper { width: 100%; height: 100%; position: relative; }
+        }
 
-        /* === MÀN HÌNH CHỜ & NÚT BẤM === */
+        /* === MÀN HÌNH CHỜ === */
         #start-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #ffdde1;
-            z-index: 100;
+            background-color: #ffdde1; z-index: 100;
             display: flex; justify-content: center; align-items: center; flex-direction: column;
             transition: opacity 0.5s ease;
         }
-        
-        /* Hiệu ứng nút bấm rung rinh */
         @keyframes heartbeat {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-            100% { transform: scale(1); }
+            0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); }
         }
-
         #start-button {
-            padding: 15px 40px;
-            font-family: 'Pacifico', cursive;
-            font-size: 1.8em;
-            color: white;
-            background: linear-gradient(45deg, #ff69b4, #ff8da1);
-            border: none;
-            border-radius: 50px;
-            cursor: pointer;
+            padding: 15px 40px; font-family: 'Pacifico', cursive; font-size: 1.8em;
+            color: white; background: linear-gradient(45deg, #ff69b4, #ff8da1);
+            border: none; border-radius: 50px; cursor: pointer;
             box-shadow: 0 10px 25px rgba(255, 105, 180, 0.4);
             animation: heartbeat 1.5s infinite;
         }
 
-        /* === MÀN HÌNH ĐẾM NGƯỢC === */
+        /* === ĐẾM NGƯỢC === */
         #countdown-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background-color: #ffdde1; /* Nền hồng */
-            z-index: 99; /* Dưới nút start một chút */
-            display: none; /* Ẩn mặc định */
-            justify-content: center; align-items: center;
-            flex-direction: column;
+            background-color: #ffdde1; z-index: 99; display: none;
+            justify-content: center; align-items: center; flex-direction: column;
         }
         #countdown-number {
-            font-size: 8em;
-            color: #ff69b4;
+            font-size: 8em; color: #ff69b4;
             text-shadow: 2px 2px 10px rgba(255, 255, 255, 0.8);
             animation: countPulse 1s infinite;
         }
         @keyframes countPulse {
-            0% { transform: scale(0.5); opacity: 0; }
-            50% { transform: scale(1.2); opacity: 1; }
-            100% { transform: scale(1); opacity: 0; }
+            0% { transform: scale(0.5); opacity: 0; } 50% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); opacity: 0; }
         }
 
-        /* === MATRIX & NỘI DUNG CHÍNH === */
+        /* === MATRIX & TEXT === */
         #matrix-canvas {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 1;
-            transition: opacity 1.5s ease-out;
+            z-index: 1; transition: opacity 1.5s ease-out;
         }
-
         .content-container {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             display: flex; justify-content: center; align-items: center;
-            z-index: 2;
-            padding: 20px;
-            pointer-events: none; /* Để click xuyên qua nếu cần */
+            z-index: 2; padding: 20px; pointer-events: none;
         }
-
         .message-box {
-            width: 100%;
-            text-align: center;
-            color: white;
+            width: 100%; text-align: center; color: white;
             text-shadow: 0 0 10px rgba(255, 255, 255, 0.8), 0 0 20px #ff0055;
         }
-
         .message-box p {
-            font-size: clamp(2.2em, 6vw, 3.5em);
-            margin-bottom: 20px;
-            opacity: 0;
-            transform: translateY(30px);
-            transition: opacity 1s ease-out, transform 1s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Hiệu ứng nảy nhẹ */
-            display: none; /* Ẩn hoàn toàn để không chiếm chỗ */
+            font-size: clamp(2.2em, 6vw, 3.5em); margin-bottom: 20px;
+            opacity: 0; transform: translateY(30px);
+            transition: opacity 1s ease-out, transform 1s; display: none;
         }
-        .message-box p.visible {
-            display: block; /* Hiện lại */
-            animation: fadeInMove 1s forwards; 
-        }
-        @keyframes fadeInMove {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
+        .message-box p.visible { display: block; animation: fadeInMove 1s forwards; }
+        @keyframes fadeInMove { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
         .fade-out { opacity: 0 !important; transition: opacity 2s; }
 
-        /* === HIỆU ỨNG HOA & ẢNH TRÁI TIM === */
+        /* === HOA BAY === */
         #flower-container {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            z-index: 3;
-            pointer-events: none;
-            overflow: hidden;
+            z-index: 3; pointer-events: none; overflow: hidden;
         }
-
-        /* Class chung cho vật thể bay (hoa + ảnh) */
-        .floating-item {
-            position: absolute;
-            bottom: -100px;
-            opacity: 0;
-            animation-name: floatUp;
-            animation-timing-function: linear;
-            animation-fill-mode: forwards;
-        }
-
-        /* Style riêng cho Hoa */
         .flower-item {
-            font-size: 2.5em;
+            position: absolute; bottom: -100px;
+            font-size: 2.5em; opacity: 0;
+            animation: floatUp linear forwards;
             filter: drop-shadow(0 0 5px rgba(255,255,255,0.5));
         }
-
-        /* Style riêng cho Ảnh Trái Tim */
-        .heart-image-item {
-            width: 80px;
-            height: 80px;
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            /* Tạo hình trái tim bằng mask-image (cách hiện đại nhất) */
-            mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/></svg>");
-            -webkit-mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><path d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/></svg>");
-            mask-repeat: no-repeat;
-            mask-position: center;
-            mask-size: contain;
-            
-            /* Viền phát sáng cho trái tim */
-            filter: drop-shadow(0 0 8px rgba(255, 20, 147, 0.8)); 
-            box-shadow: inset 0 0 20px rgba(255,192,203,0.5); 
+        @keyframes floatUp {
+            0% { transform: translateY(0) rotate(0deg) scale(0.5); opacity: 0; }
+            10% { opacity: 1; transform: scale(1); }
+            100% { transform: translateY(-110vh) rotate(360deg) scale(1.2); opacity: 0; }
         }
 
-        @keyframes floatUp {
-            0% { transform: translateY(0) translateX(0) rotate(0deg) scale(0.5); opacity: 0; }
-            10% { opacity: 1; transform: scale(1); }
-            50% { transform: translateY(-40vh) translateX(20px) rotate(180deg); }
-            100% { transform: translateY(-110vh) translateX(-20px) rotate(360deg) scale(1.2); opacity: 0; }
+        /* === ẢNH TRUNG TÂM (ĐƯỢC CHỈNH SỬA) === */
+        #center-image-container {
+            position: absolute; 
+            top: 50%; left: 50%; 
+            transform: translate(-50%, -50%); /* Căn chính giữa màn hình */
+            z-index: 4; /* Nằm trên lớp Matrix, dưới lớp chữ Happy Birthday */
+            opacity: 0; /* Ẩn mặc định */
+            transition: opacity 3s ease-in; /* Hiện từ từ trong 3 giây */
+            
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        #center-image-container img {
+            max-width: 85%; /* Không bao giờ rộng quá 85% màn hình */
+            max-height: 70vh; /* Không bao giờ cao quá 70% chiều cao màn hình */
+            width: auto;
+            height: auto;
+            
+            border: 8px solid #fff; /* Viền trắng giống khung ảnh polaroid */
+            border-radius: 15px; /* Bo góc nhẹ */
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3), 0 0 20px rgba(255, 105, 180, 0.6); /* Đổ bóng và phát sáng nhẹ */
+            object-fit: contain; /* Giữ nguyên tỉ lệ ảnh */
         }
 
         /* === LỜI CHÚC CUỐI === */
         #final-message-container {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            display: flex; justify-content: center; align-items: center;
-            z-index: 4;
-            opacity: 0;
-            transition: opacity 2s ease-in;
-            pointer-events: none;
+            display: flex; justify-content: center; align-items: flex-end; /* Căn xuống đáy */
+            padding-bottom: 8%; /* Cách đáy một khoảng */
+            z-index: 5; opacity: 0;
+            transition: opacity 2s ease-in; pointer-events: none;
         }
+        
         #final-message h1 {
-            font-size: clamp(3em, 9vw, 5em);
-            color: #fff;
-            text-shadow: 0 0 15px #ff1493, 0 0 30px #ff1493, 0 0 50px #fff;
+            font-size: clamp(2.5em, 8vw, 4.5em); color: #fff;
+            text-shadow: 0 0 10px #ff1493, 0 0 20px #ff1493, 2px 2px 4px rgba(0,0,0,0.6);
             text-align: center;
             animation: pulseFinal 2s infinite ease-in-out;
         }
-        @keyframes pulseFinal {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
+        @keyframes pulseFinal { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+
     </style>
 </head>
 
 <body>
 
-    <!-- Wrapper chính để xử lý xoay màn hình trên mobile -->
     <div id="main-wrapper">
-
-        <!-- Màn hình chờ -->
+        <!-- Nút bấm ban đầu -->
         <div id="start-screen">
-            <button id="start-button"> Nhấn vào đây nhé!</button>
+            <button id="start-button">❤️ Nhấn vào đây nhé! ❤️</button>
         </div>
 
         <!-- Màn hình đếm ngược -->
@@ -230,8 +185,8 @@
         <div class="content-container">
             <div class="message-box">
                 <p>Gửi đến: Hoa Linh 🌷</p>
-                <p>25/11/2025
-                <p>Hôm nay là ngày đặc biệt của bn... 🎉<p>
+                <p>25/11/2025</p>
+                <p>Hôm nay là ngày đặc biệt của bn... 🎉</p>
                 <p>Chúc bn một ngày sinh nhật vui vẻ 🩷</p>
                 <p>..Vậy là cũng đã gia nhập hội U30 ròi 💆‍♂️ kkk..</p>
                 <p>Chúc bn tuổi mới luôn xinh đẹp, yêu đời và tích cực nhé!</p>
@@ -242,13 +197,20 @@
             </div>
         </div>
 
+        <!-- Container chứa hoa bay (chỉ có hoa) -->
         <div id="flower-container"></div>
+
+        <!-- Container chứa ẢNH ĐỨNG YÊN GIỮA MÀN HÌNH -->
+        <div id="center-image-container">
+            <!-- Đảm bảo tên file ảnh chính xác là anh_nenn.jpg -->
+            <img src="anh-nenn.jpg" alt="Birthday Photo">
+        </div>
 
         <div id="final-message-container">
             <div id="final-message"><h1>..Happy Birthday ❤️</h1></div>
         </div>
 
-    </div> <!-- Kết thúc main-wrapper -->
+    </div>
 
     <script>
         const startScreen = document.getElementById('start-screen');
@@ -258,15 +220,12 @@
         const music = document.getElementById('background-music');
         const mainWrapper = document.getElementById('main-wrapper');
 
-        // === 1. XỬ LÝ NÚT BẤM VÀ ĐẾM NGƯỢC ===
+        // === 1. START & COUNTDOWN ===
         startButton.addEventListener('click', () => {
-            // Ẩn nút bấm
             startScreen.style.opacity = '0';
             setTimeout(() => { startScreen.style.display = 'none'; }, 500);
-
-            // Hiện màn hình đếm ngược
             countdownScreen.style.display = 'flex';
-            music.play().catch(e => console.log("Cần tương tác để phát nhạc")); // Phát nhạc ngay
+            music.play().catch(e => console.log("Audio play error"));
 
             let count = 5;
             const countInterval = setInterval(() => {
@@ -275,144 +234,109 @@
                     countdownNumber.innerText = count;
                 } else {
                     clearInterval(countInterval);
-                    // Kết thúc đếm ngược -> Vào nội dung chính
                     countdownScreen.style.display = 'none';
                     runVisualTimeline();
                 }
             }, 1000);
         });
 
-        // === 2. HIỆU ỨNG MATRIX (TỐI ƯU CHO WRAPPER) ===
+        // === 2. MATRIX ===
         const canvas = document.getElementById('matrix-canvas');
         const ctx = canvas.getContext('2d');
-
-        // Hàm set kích thước canvas theo kích thước của wrapper (để hỗ trợ xoay)
         function resizeCanvas() {
             canvas.width = mainWrapper.offsetWidth;
             canvas.height = mainWrapper.offsetHeight;
         }
-        // Gọi resize ngay và khi đổi kích thước
         resizeCanvas();
         window.addEventListener('resize', resizeCanvas);
 
         const characters = '❤';
         const fontSize = 20;
         let columns = Math.floor(canvas.width / fontSize);
-        let drops = [];
-        
-        function initMatrix() {
-            columns = Math.floor(canvas.width / fontSize);
-            drops = Array(columns).fill(1);
-        }
+        let drops = []; 
+        function initMatrix() { columns = Math.floor(canvas.width / fontSize); drops = Array(columns).fill(1); }
         initMatrix();
 
         function drawMatrix() {
-            ctx.fillStyle = 'rgba(255, 221, 225, 0.15)'; // Nền mờ hơn chút
+            ctx.fillStyle = 'rgba(255, 221, 225, 0.15)';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            
-            ctx.fillStyle = '#ff5e99'; // Màu chữ đậm hơn chút
+            ctx.fillStyle = '#ff5e99';
             ctx.font = `${fontSize}px Arial`;
-            
             for (let i = 0; i < drops.length; i++) {
-                const text = characters;
-                ctx.fillText(text, i * fontSize, drops[i] * fontSize);
-                
-                if (drops[i] * fontSize > canvas.height && Math.random() > 0.98) {
-                    drops[i] = 0;
-                }
+                ctx.fillText(characters, i * fontSize, drops[i] * fontSize);
+                if (drops[i] * fontSize > canvas.height && Math.random() > 0.98) drops[i] = 0;
                 drops[i]++;
             }
         }
 
-        // === 3. HIỆU ỨNG HOA VÀ ẢNH NỔI LÊN ===
+        // === 3. HOA BAY (Chỉ tạo hoa, không tạo ảnh) ===
         const flowerContainer = document.getElementById('flower-container');
         const flowers = ['🌸', '🌺', '🌷', '🌻', '🌼', '🌹', '💐']; 
-        const imageUrl = 'anh-nenn.jpg'; // Link ảnh của bạn
 
-        function createFloatingElement() {
+        function createFlower() {
             const el = document.createElement('div');
-            // Random: 70% là hoa, 30% là ảnh
-            const isImage = Math.random() > 0.7; 
-
-            if (isImage) {
-                el.classList.add('floating-item', 'heart-image-item');
-                el.style.backgroundImage = `url('${imageUrl}')`;
-            } else {
-                el.classList.add('floating-item', 'flower-item');
-                el.innerText = flowers[Math.floor(Math.random() * flowers.length)];
-            }
-
-            // Random vị trí xuất phát (theo chiều rộng của wrapper)
+            el.classList.add('flower-item');
+            el.innerText = flowers[Math.floor(Math.random() * flowers.length)];
             el.style.left = `${Math.random() * 100}%`;
-            
-            // Random các thông số animation để tự nhiên hơn
-            const duration = Math.random() * 3 + 4; // 4s -> 7s
+            // Random kích thước hoa một chút cho tự nhiên
+            el.style.fontSize = `${Math.random() * 1.5 + 1.5}em`;
+            const duration = Math.random() * 3 + 4; // 4s - 7s
             el.style.animationDuration = `${duration}s`;
-            el.style.animationDelay = '0s';
-            
             flowerContainer.appendChild(el);
-
-            // Xóa sau khi bay xong
             setTimeout(() => el.remove(), duration * 1000);
         }
 
-        // === 4. KỊCH BẢN CHẠY CHƯƠNG TRÌNH ===
+        // === 4. TIMELINE CHÍNH ===
         function runVisualTimeline() {
-            // Chạy Matrix
             const matrixInterval = setInterval(drawMatrix, 50);
-
             const messages = document.querySelectorAll('.message-box p');
             const messageBox = document.querySelector('.message-box');
+            const centerImageContainer = document.getElementById('center-image-container'); // Khung ảnh
             const finalMessageContainer = document.getElementById('final-message-container');
             
             let currentTime = 0;
-            const timePerLine = 2500; // Thời gian đọc mỗi dòng (tăng lên cho dễ đọc)
+            const timePerLine = 2500; 
 
-            // Hiện từng dòng chữ (chỉ hiện 1 dòng tại 1 thời điểm để đỡ rối trên đt)
+            // Chạy từng dòng text
             messages.forEach((p, index) => {
                 setTimeout(() => {
-                    // Ẩn dòng trước đó (nếu có và không phải là dòng cuối cùng của cre)
                     if(index > 0) {
                         messages[index-1].style.display = 'none';
                         messages[index-1].classList.remove('visible');
                     }
-                    // Nếu là dòng Cre cuối cùng thì giữ lại dòng trái tim
                     if (index === messages.length - 1) {
-                         messages[index-1].style.display = 'block'; // Giữ lại trái tim
+                         messages[index-1].style.display = 'block'; 
                          messages[index-1].classList.add('visible');
                     }
-
                     p.classList.add('visible');
                 }, currentTime);
                 currentTime += timePerLine;
             });
 
-            // Tổng thời gian chờ hết chữ
             const totalTextTime = currentTime + 2000;
 
-            // Sau khi hết chữ: Mờ matrix + Ẩn box chữ
+            // Hết chữ -> Mờ Matrix & Box chữ
             setTimeout(() => {
                 messageBox.classList.add('fade-out');
                 canvas.classList.add('fade-out');
-                setTimeout(() => clearInterval(matrixInterval), 2000); // Dừng vẽ matrix
+                setTimeout(() => clearInterval(matrixInterval), 2000);
             }, totalTextTime);
 
-            // Bắt đầu mưa hoa và ảnh (bắt đầu sớm hơn 1 xíu khi chữ đang mờ)
+            // GIAI ĐOẠN CUỐI: Hiện Ảnh + Hoa bay + Chữ Happy Birthday
             setTimeout(() => {
-                // Tạo liên tục
-                const flowerInterval = setInterval(createFloatingElement, 300); 
+                // 1. Bắt đầu tạo hoa bay
+                const flowerInterval = setInterval(createFlower, 200);
                 
-                // Dừng tạo sau 15 giây (hoặc để chạy mãi nếu muốn)
-                // setTimeout(() => clearInterval(flowerInterval), 15000); 
-            }, totalTextTime - 1000);
+                // 2. Hiện ảnh trung tâm (đứng yên, fade in)
+                centerImageContainer.style.opacity = '1';
 
-            // Hiện lời chúc cuối cùng
+            }, totalTextTime - 1000); // Bắt đầu sớm hơn chút khi chữ vừa tắt
+
+            // Hiện chữ Happy Birthday sau khi ảnh đã hiện rõ một chút
             setTimeout(() => {
                 finalMessageContainer.style.opacity = '1';
-            }, totalTextTime + 1000);
+            }, totalTextTime + 1500);
         }
     </script>
 </body>
 </html>
-
-
